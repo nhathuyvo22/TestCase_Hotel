@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tính Tiền Phòng Khách Sạn - Bài Tập 1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+        .card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 450px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            display: none;
+        }
+        .error-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border-radius: 4px;
+            display: none;
+        }
+        .result-item {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .total-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #28a745;
+            border-top: 1px solid #ccc;
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Tính Tiền Phòng Khách Sạn</h2>
+    <form id="hotelForm">
+        <div class="form-group">
+            <label for="roomType">Loại phòng:</label>
+            <select id="roomType" name="roomType">
+                <option value="A">Loại A (450.000 VNĐ)</option>
+                <option value="B">Loại B (350.000 VNĐ)</option>
+                <option value="C">Loại C (250.000 VNĐ)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="numPeople">Số lượng người:</label>
+            <input type="number" id="numPeople" name="numPeople" placeholder="Nhập số người (tối đa 4)" value="2">
+        </div>
+
+        <div class="form-group">
+            <label for="checkIn">Ngày vào:</label>
+            <input type="date" id="checkIn" name="checkIn" value="2026-06-01">
+        </div>
+
+        <div class="form-group">
+            <label for="checkOut">Ngày ra:</label>
+            <input type="date" id="checkOut" name="checkOut" value="2026-06-06">
+        </div>
+
+        <div class="form-group">
+            <label for="serviceFee">Tiền dịch vụ (VNĐ):</label>
+            <input type="number" id="serviceFee" name="serviceFee" placeholder="Nhập tiền dịch vụ" value="500000">
+        </div>
+
+        <button type="button" id="btnCalculate" onclick="calculateHotelFee()">Tính tiền phòng</button>
+    </form>
+
+    <div id="errorBox" class="error-box"></div>
+
+    <div id="resultBox" class="result-box">
+        <div class="result-item" id="resDays">Số ngày lưu trú: 0 ngày</div>
+        <div class="result-item" id="resUnitPrice">Đơn giá phòng: 0 VNĐ/ngày</div>
+        <div class="result-item" id="resSubtotal">Tổng tiền chưa giảm: 0 VNĐ</div>
+        <div class="result-item" id="resDiscount">% Giảm giá: 0%</div>
+        <div class="result-item total-price" id="resTotal">Giá phòng cuối cùng: 0 VNĐ</div>
+    </div>
+</div>
+
+<script>
+    function calculateHotelFee() {
+        const roomType = document.getElementById('roomType').value;
+        const numPeople = parseInt(document.getElementById('numPeople').value);
+        const checkInVal = document.getElementById('checkIn').value;
+        const checkOutVal = document.getElementById('checkOut').value;
+        const serviceFee = parseFloat(document.getElementById('serviceFee').value) || 0;
+
+        const errorBox = document.getElementById('errorBox');
+        const resultBox = document.getElementById('resultBox');
+
+        // Reset hiển thị
+        errorBox.style.display = 'none';
+        resultBox.style.display = 'none';
+
+        // 1. Kiểm tra số lượng người (Tối đa 4 người, tối thiểu 1 người)
+        if (isNaN(numPeople) || numPeople < 1) {
+            errorBox.innerText = "Số lượng người phải lớn hơn 0.";
+            errorBox.style.display = 'block';
+            return;
+        }
+        if (numPeople > 4) {
+            errorBox.innerText = "Số lượng người tối đa trong một phòng là 4 người.";
+            errorBox.style.display = 'block';
+            return;
+        }
+
+        // 2. Tính số ngày lưu trú
+        if (!checkInVal || !checkOutVal) {
+            errorBox.innerText = "Vui lòng chọn đầy đủ ngày vào và ngày ra.";
+            errorBox.style.display = 'block';
+            return;
+        }
+
+        const date1 = new Date(checkInVal);
+        const date2 = new Date(checkOutVal);
+
+        if (date2 < date1) {
+            errorBox.innerText = "Ngày ra không thể nhỏ hơn ngày vào.";
+            errorBox.style.display = 'block';
+            return;
+        }
+
+        const timeDiff = date2.getTime() - date1.getTime();
+        let days = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        if (days === 0) {
+            days = 1; // Cùng ngày vào/ra vẫn tính 1 ngày
+        }
+
+        // 3. Xกำหนด đơn giá gốc theo loại phòng
+        let basePrice = 0;
+        if (roomType === 'A') basePrice = 450000;
+        else if (roomType === 'B') basePrice = 350000;
+        else if (roomType === 'C') basePrice = 250000;
+
+        // 4. Tính phụ thu theo số người (> 2 người thêm 10%/người)
+        let extraRate = 0;
+        if (numPeople > 2) {
+            extraRate = (numPeople - 2) * 0.10;
+        }
+        const unitPrice = basePrice + (extraRate * basePrice);
+
+        // 5. Tính tổng tiền chưa giảm
+        const subtotal = (days * unitPrice) + serviceFee;
+
+        // 6. Tính % giảm giá dựa trên tổng tiền
+        let discountRate = 0;
+        if (subtotal >= 4000000) {
+            discountRate = 0.20; // Giảm 20%
+        } else if (subtotal >= 2000000) {
+            discountRate = 0.10; // Giảm 10%
+        }
+
+        // 7. Giá phòng cuối cùng
+        const totalPrice = subtotal * (1 - discountRate);
+
+        // Hiển thị kết quả
+        document.getElementById('resDays').innerText = `Số ngày lưu trú: ${days} ngày`;
+        document.getElementById('resUnitPrice').innerText = `Đơn giá phòng: ${unitPrice.toLocaleString('vi-VN')} VNĐ/ngày`;
+        document.getElementById('resSubtotal').innerText = `Tổng tiền chưa giảm: ${subtotal.toLocaleString('vi-VN')} VNĐ`;
+        document.getElementById('resDiscount').innerText = `% Giảm giá: ${discountRate * 100}%`;
+        document.getElementById('resTotal').innerText = `Giá phòng cuối cùng: ${totalPrice.toLocaleString('vi-VN')} VNĐ`;
+
+        resultBox.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
